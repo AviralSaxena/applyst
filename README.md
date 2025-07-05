@@ -5,7 +5,7 @@
 It helps job seekers stay organized, informed, and efficient throughout the application process — eliminating the guesswork, clutter, and repetition.
 
 ---
-## What It Does
+## What It Does? 
 
 AppLyst scans your inbox for job-related communication, detects and updates the status of your applications using NLP, and displays all progress in a centralized, user-friendly dashboard. It is designed for active job seekers who need to manage dozens of applications without losing track or wasting time updating spreadsheets.
 
