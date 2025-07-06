@@ -50,3 +50,22 @@ AppLyst/
 ├── database/         # DB schemas and scripts
 ├── docs/             # Diagrams, research, and notes
 └── README.md         # Project overview
+```
+
+## Installation Instructions
+
+1. **Clone the repository**:
+  ```bash
+    git clone https://github.com/AviralSaxena/applyst.git
+    cd applyst
+  ```
+2. **Install dependencies**:
+  ```bash
+    pip install -r requirements.txt
+  ```
+
+3. **Run client**:
+  ```bash
+    python server/email_scanner.py
+  ```
+
