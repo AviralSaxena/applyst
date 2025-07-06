@@ -5,7 +5,7 @@ node_modules/
 client/build/
 
 # Environment variables
-.env
+*.env
 
 # Python cache
 __pycache__/
@@ -19,3 +19,6 @@ Thumbs.db
 logs/
 *.log
 npm-debug.log*
+
+#Google
+*client_secret.json
