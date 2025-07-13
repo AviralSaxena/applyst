@@ -65,20 +65,20 @@ To get AppLyst running on your local machine, you'll need to set up each major c
     ```bash
     cd client
     npm install
-    # If your client needs specific environment variables (e.g., API keys for the backend),
-    # create a `.env` file based on a `.env.example` if provided.
-    npm start # Or `npm run dev` if you're using a Next.js setup.
+    
+npm start # Or `npm run dev` if you're using a Next.js setup.
     ```
 
 3.  **Backend (`server/`) Setup:**
     Switch to the `server` directory, install your Python dependencies, and set up environment variables before running the server:
     ```bash
     cd ../server
-    pip install -r requirements.txt # Assumes a requirements.txt file for Python backend.
-    # Create a `.env` file for your backend, mirroring a `.env.example` if available.
-    # This will contain sensitive information like database credentials and email server details.
-    # Example: `cp .env.example .env`
-    # Run your Flask application:
+    pip install -r requirements.txt
+ # Assumes a requirements.txt file for Python backend.
+ # Create a `.env` file for your backend, mirroring a `.env.example` if available.
+# This will contain sensitive information like database credentials and email server details.
+ # Example: `cp .env.example .env`
+ # Run your Flask application:
     flask run
     ```
 
@@ -94,7 +94,7 @@ To get AppLyst running on your local machine, you'll need to set up each major c
     ```
 
 5.  **Database Setup:**
-    The database setup will depend on your chosen database (MongoDB or PostgreSQL). Refer to the `database/` directory (if you create one) for specific schema and migration instructions. You'll likely need to start your database server separately.
+    The database setup depends on chosen database (MongoDB or PostgreSQL). Refer to the `database/` directory (if you create one) for specific schema and migration instructions. You'll likely need to start your database server separately.
 
 ---
 
