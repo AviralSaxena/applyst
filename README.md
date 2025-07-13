@@ -32,15 +32,46 @@ AppLyst is a distributed system, breaking down complex tasks into specialized, s
 
 ## Project Structure
 
-This project is organized into clear, top-level directories, each handling a distinct part of the AppLyst application:
-
-* **`client/`**: This directory contains your web application's **frontend**. Here you'll find all the code for your React components (like `Header.js`, `Footer.js`), page definitions (`index.js`, `_app.js`), static assets (`favicon.ico`, `logo-netlify.svg`), and global styles. It also includes your Cypress end-to-end tests (`cypress/e2e`) and Netlify deployment configuration (`netlify.toml`).
-* **`server/`**: This is where your **core backend API** lives. It includes your main Flask application (`app.py`), the logic for connecting to and scanning emails (`email_scanner.py`), and your database models (`models.py`). Essential configuration files for the server are also kept here.
-* **`nlp-engine/`**: (If you add this as a separate service) This would be a dedicated **Python microservice** for all AI and Natural Language Processing tasks related to email content.
-* **`database/`**: (If you add this as a dedicated directory) This would contain your database schemas, migration scripts, and any initial seed data.
-* **`docs/`**: (If you add this) A place for comprehensive project documentation, architectural diagrams, and research notes.
-* **`.gitignore`**: Tells Git which files and directories to ignore (like `node_modules`, `venv`, sensitive `.env` files).
-* **`README.md`**: This main project overview you're reading!
+AppLyst/
+├── client/                     # Frontend (React) application
+│   ├── public/                 # Static assets (HTML template, favicon)
+│   └── src/                    # React application source code
+│       ├── assets/             # Images, logos, fonts, etc.
+│       ├── components/         # Reusable UI components (e.g., Buttons, Cards, Modals)
+│       ├── pages/              # Top-level, route-based views (e.g., Home, Dashboard, Settings)
+│       ├── services/           # Modules for API calls and external service integrations (e.g., authService.js, emailService.js)
+│       ├── hooks/              # Custom React hooks for reusable logic
+│       ├── context/            # React context providers for global state management (e.g., AuthContext)
+│       ├── utils/              # General utility and helper functions
+│       ├── App.jsx             # Main application component
+│       ├── main.jsx            # Entry point for React app rendering
+│       └── index.css           # Global styles
+│
+├── server/                     # Backend (Python API) services
+│   ├── app/                    # Core backend application logic
+│   │   ├── models/             # Database models (e.g., User, JobApplication, EmailLog)
+│   │   ├── routes/             # API endpoint definitions (e.g., auth.py, emails.py, applications.py)
+│   │   ├── services/           # Business logic and complex operations (e.g., email scanning, NLP processing)
+│   │   ├── schemas/            # Data validation and serialization schemas (e.g., Pydantic models, Marshmallow schemas)
+│   │   ├── core/               # Core configurations, database connection, middleware
+│   │   ├── utils/              # Backend utility and helper functions (e.g., email parsing helpers)
+│   │   └── main.py             # Main entry point for the Python API application (e.g., FastAPI/Flask app instance)
+│   ├── tests/                  # Unit and integration tests for the backend
+│   ├── requirements.txt        # Python dependencies for the backend
+│   └── .env                    # Environment variables (sensitive data, database URIs, API keys - **DO NOT COMMIT**)
+│
+├── shared/                     # Shared code, types, or constants used by both client and server (e.g., API response structures)
+│
+├── docs/                       # Project documentation, architecture diagrams, design notes
+│
+├── docker/                     # Docker setup files for containerization and orchestration
+│   ├── Dockerfile.client       # Dockerfile for building the frontend image
+│   ├── Dockerfile.server       # Dockerfile for building the backend image
+│   └── docker-compose.yml      # Orchestration file to run multiple services with Docker Compose
+│
+├── .gitignore                  # Global Git ignore rules for the entire monorepo
+├── README.md                   # This main project overview
+└── 
 
 ---
 
