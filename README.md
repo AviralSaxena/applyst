@@ -48,6 +48,7 @@ applyst/
 ├── README.md
 ├── requirements.txt
 └── .env               # Env variables (not committed)
+```
 
 ## Installation Instructions
 
