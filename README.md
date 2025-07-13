@@ -31,7 +31,8 @@ AppLyst is a distributed system, breaking down complex tasks into specialized, s
 ---
 
 ## Project Structure
-**applyst/
+```bash
+applyst/
 ├── client/            # Frontend (React or client.py)
 │   └── client.py
 ├── server/            # Backend (Flask or FastAPI)
