@@ -31,29 +31,25 @@ AppLyst is a distributed system, breaking down complex tasks into specialized, s
 ---
 
 ## Project Structure
-
 applyst/
-├── client/                  # (Optional) Frontend UI, if added later
-│   └── client.py            # Current frontend logic (could move to /frontend later)
-│
-├── server/                  # Backend logic
-│   ├── app.py               # Main app entry point (Flask or FastAPI)
-│   ├── models.py            # DB models or data structures
-│   ├── email_scanner.py     # Handles email parsing / scanning
-│   ├── routes/              # API endpoints (auth.py, user.py, etc.)
-│   ├── utils/               # Helper functions (token_gen.py, filters.py)
-│   └── services/            # Business logic (email_service.py, user_service.py)
-│
-├── tests/                   # Unit/integration tests
-│   └── test_app.py
-│
-├── .gitignore
-├── README.md
-├── requirements.txt
-└── .env                     # Environment variables (e.g., secrets, DB URL)
+├── client/                  # (Optional) Frontend UI or client script
+│   └── client.py            # Current frontend logic
 
+├── server/                  # Backend application
+│   ├── app.py               # Entry point (e.g., FastAPI or Flask app)
+│   ├── models.py            # Database models or schemas
+│   ├── email_scanner.py     # Email parsing and analysis logic
+│   ├── routes/              # API endpoints (e.g., auth.py, user.py)
+│   ├── utils/               # Helper utilities (e.g., token_gen.py, validators.py)
+│   └── services/            # Business logic (e.g., email_service.py, user_service.py)
 
----
+├── tests/                   # Unit and integration tests
+│   └── test_app.py          # Example test file
+
+├── .gitignore               # Git ignore rules
+├── README.md                # Project documentation
+├── requirements.txt         # Python dependencies
+└── .env                     # Environment variables (never push to Git)
 
 ## Installation Instructions
 
