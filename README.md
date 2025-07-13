@@ -25,7 +25,8 @@ AppLyst is a distributed system, breaking down complex tasks into specialized, s
 * **Frontend (`client/`):** The user-facing web application, built with **React.js** and styled with **TailwindCSS**. This is what users interact with directly in their browser.
 * **Backend (`server/`):** A core API server built with **Node.js** and **Express**. It handles data requests from the frontend and orchestrates communication with the database and NLP engine.
 * **AI/NLP Engine (`nlp-engine/`):** A dedicated **Python microservice** leveraging libraries like `spaCy` or **OpenAI**. Its job is to parse email content and intelligently determine application statuses.
-* **Database:** For persistent storage of all application data, AppLyst can utilize either **MongoDB** (for flexible, document-based storage) or **PostgreSQL** (for robust relational data management).
+* **Database:** For persistent storage of all application data,
+AppLyst can utilize either **MongoDB** (for flexible, document-based storage) or **PostgreSQL** (for robust relational data management).
 * **Email Integration:** Seamlessly connects to email services like Gmail via their official APIs (e.g., Gmail API) for secure OAuth and message fetching.
 
 ---
