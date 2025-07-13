@@ -32,46 +32,26 @@ AppLyst is a distributed system, breaking down complex tasks into specialized, s
 
 ## Project Structure
 
-AppLyst/
-├── client/                     # Frontend (React) application
-│   ├── public/                 # Static assets (HTML template, favicon)
-│   └── src/                    # React application source code
-│       ├── assets/             # Images, logos, fonts, etc.
-│       ├── components/         # Reusable UI components (e.g., Buttons, Cards, Modals)
-│       ├── pages/              # Top-level, route-based views (e.g., Home, Dashboard, Settings)
-│       ├── services/           # Modules for API calls and external service integrations (e.g., authService.js, emailService.js)
-│       ├── hooks/              # Custom React hooks for reusable logic
-│       ├── context/            # React context providers for global state management (e.g., AuthContext)
-│       ├── utils/              # General utility and helper functions
-│       ├── App.jsx             # Main application component
-│       ├── main.jsx            # Entry point for React app rendering
-│       └── index.css           # Global styles
+applyst/
+├── client/                  # (Optional) Frontend UI, if added later
+│   └── client.py            # Current frontend logic (could move to /frontend later)
 │
-├── server/                     # Backend (Python API) services
-│   ├── app/                    # Core backend application logic
-│   │   ├── models/             # Database models (e.g., User, JobApplication, EmailLog)
-│   │   ├── routes/             # API endpoint definitions (e.g., auth.py, emails.py, applications.py)
-│   │   ├── services/           # Business logic and complex operations (e.g., email scanning, NLP processing)
-│   │   ├── schemas/            # Data validation and serialization schemas (e.g., Pydantic models, Marshmallow schemas)
-│   │   ├── core/               # Core configurations, database connection, middleware
-│   │   ├── utils/              # Backend utility and helper functions (e.g., email parsing helpers)
-│   │   └── main.py             # Main entry point for the Python API application (e.g., FastAPI/Flask app instance)
-│   ├── tests/                  # Unit and integration tests for the backend
-│   ├── requirements.txt        # Python dependencies for the backend
-│   └── .env                    # Environment variables (sensitive data, database URIs, API keys - **DO NOT COMMIT**)
+├── server/                  # Backend logic
+│   ├── app.py               # Main app entry point (Flask or FastAPI)
+│   ├── models.py            # DB models or data structures
+│   ├── email_scanner.py     # Handles email parsing / scanning
+│   ├── routes/              # API endpoints (auth.py, user.py, etc.)
+│   ├── utils/               # Helper functions (token_gen.py, filters.py)
+│   └── services/            # Business logic (email_service.py, user_service.py)
 │
-├── shared/                     # Shared code, types, or constants used by both client and server (e.g., API response structures)
+├── tests/                   # Unit/integration tests
+│   └── test_app.py
 │
-├── docs/                       # Project documentation, architecture diagrams, design notes
-│
-├── docker/                     # Docker setup files for containerization and orchestration
-│   ├── Dockerfile.client       # Dockerfile for building the frontend image
-│   ├── Dockerfile.server       # Dockerfile for building the backend image
-│   └── docker-compose.yml      # Orchestration file to run multiple services with Docker Compose
-│
-├── .gitignore                  # Global Git ignore rules for the entire monorepo
-├── README.md                   # This main project overview
-└── 
+├── .gitignore
+├── README.md
+├── requirements.txt
+└── .env                     # Environment variables (e.g., secrets, DB URL)
+
 
 ---
 
