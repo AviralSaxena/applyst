@@ -32,24 +32,21 @@ AppLyst is a distributed system, breaking down complex tasks into specialized, s
 
 ## Project Structure
 applyst/
-├── client/                  # (Optional) Frontend UI or client script
-│   └── client.py            # Current frontend logic
-
-├── server/                  # Backend application
-│   ├── app.py               # Entry point (e.g., FastAPI or Flask app)
-│   ├── models.py            # Database models or schemas
-│   ├── email_scanner.py     # Email parsing and analysis logic
-│   ├── routes/              # API endpoints (e.g., auth.py, user.py)
-│   ├── utils/               # Helper utilities (e.g., token_gen.py, validators.py)
-│   └── services/            # Business logic (e.g., email_service.py, user_service.py)
-
-├── tests/                   # Unit and integration tests
-│   └── test_app.py          # Example test file
-
-├── .gitignore               # Git ignore rules
-├── README.md                # Project documentation
-├── requirements.txt         # Python dependencies
-└── .env                     # Environment variables (never push to Git)
+├── client/            # Frontend (React or client.py)
+│   └── client.py
+├── server/            # Backend (Flask or FastAPI)
+│   ├── app.py
+│   ├── models.py
+│   ├── email_scanner.py
+│   ├── routes/
+│   ├── utils/
+│   └── services/
+├── tests/             # Unit/integration tests
+│   └── test_app.py
+├── .gitignore
+├── README.md
+├── requirements.txt
+└── .env               # Env variables (not committed)
 
 ## Installation Instructions
 
