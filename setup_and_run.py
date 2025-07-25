@@ -3,7 +3,6 @@
 Applyst Setup and Run Script
 Cross-platform script to set up virtual environment, install dependencies, and start the application
 """
-
 import os
 import sys
 import subprocess
@@ -11,6 +10,7 @@ import platform
 import time
 import signal
 import socket
+
 from pathlib import Path
 
 class ApplystLauncher:
@@ -19,6 +19,11 @@ class ApplystLauncher:
         self.project_root = Path(__file__).parent
         self.venv_path = self.project_root / "venv"
         self.processes = []
+
+        os.environ.setdefault("FRONTEND_URL", "http://localhost")
+        os.environ.setdefault("BACKEND_URL", "http://localhost")
+
+        os.environ.setdefault("HOST", "localhost")
 
         # Will be dynamically set
         self.frontend_port = None
@@ -42,7 +47,7 @@ class ApplystLauncher:
         for port in range(start, end):
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 try:
-                    s.bind(("localhost", port))
+                    s.bind((os.getenv('HOST'), port))
                     return port
                 except OSError:
                     continue
@@ -87,7 +92,7 @@ class ApplystLauncher:
         else:
             print(f"❌ Failed to create virtual environment: {output}")
             return False
-        
+
     def update_env_variable(self, key, value):
         env_path = self.project_root / ".env"
         lines = []
