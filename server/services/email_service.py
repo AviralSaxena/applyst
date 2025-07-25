@@ -17,7 +17,7 @@ class GmailService:
         
         self.client_id = os.getenv('GMAIL_CLIENT_ID')
         self.client_secret = os.getenv('GMAIL_CLIENT_SECRET')
-        self.redirect_uri = 'http://localhost:5000/auth/callback'
+        self.redirect_uri = f'{os.getenv("BACKEND_URL", "http://localhost")}:{os.getenv("BACKEND_PORT", "5000")}/auth/callback'
         
         if not self.client_id or not self.client_secret:
             raise ValueError("GMAIL_CLIENT_ID and GMAIL_CLIENT_SECRET required")
