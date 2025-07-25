@@ -3,14 +3,14 @@
 Applyst Setup and Run Script
 Cross-platform script to set up virtual environment, install dependencies, and start the application
 """
-
 import os
 import sys
 import subprocess
 import platform
 import time
 import signal
-import threading
+import socket
+
 from pathlib import Path
 
 class ApplystLauncher:
@@ -19,6 +19,15 @@ class ApplystLauncher:
         self.project_root = Path(__file__).parent
         self.venv_path = self.project_root / "venv"
         self.processes = []
+
+        os.environ.setdefault("FRONTEND_URL", "http://localhost")
+        os.environ.setdefault("BACKEND_URL", "http://localhost")
+
+        os.environ.setdefault("HOST", "localhost")
+
+        # Will be dynamically set
+        self.frontend_port = None
+        self.backend_port = None
         
         # Platform-specific commands
         if self.system == "windows":
@@ -34,8 +43,17 @@ class ApplystLauncher:
             self.venv_python = self.venv_path / "bin" / "python"
             self.venv_pip = self.venv_path / "bin" / "pip"
 
+    def get_free_port(self, start=5000, end=9000):
+        for port in range(start, end):
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                try:
+                    s.bind((os.getenv('HOST'), port))
+                    return port
+                except OSError:
+                    continue
+        raise RuntimeError("No available port found in range.")
+
     def run_command(self, command, cwd=None, shell=True):
-        """Run a command and return the result"""
         try:
             result = subprocess.run(
                 command, 
@@ -52,18 +70,16 @@ class ApplystLauncher:
             return False, f"Command not found: {command}"
 
     def check_python(self):
-        """Check if Python is available"""
         print("🔍 Checking Python installation...")
         success, output = self.run_command(f"{self.python_cmd} --version")
         if success:
             print(f"✅ Python found: {output.strip()}")
             return True
         else:
-            print(f"❌ Python not found. Please install Python 3.8+ first.")
+            print("❌ Python not found. Please install Python 3.8+ first.")
             return False
 
     def create_venv(self):
-        """Create virtual environment if it doesn't exist"""
         if self.venv_path.exists():
             print(f"📁 Virtual environment already exists at {self.venv_path}")
             return True
@@ -77,8 +93,28 @@ class ApplystLauncher:
             print(f"❌ Failed to create virtual environment: {output}")
             return False
 
+    def update_env_variable(self, key, value):
+        env_path = self.project_root / ".env"
+        lines = []
+        found = False
+
+        # Read and modify or append key
+        if env_path.exists():
+            with open(env_path, "r") as f:
+                for line in f:
+                    if line.strip().startswith(f"{key}="):
+                        lines.append(f"{key}='{value}'\n")
+                        found = True
+                    else:
+                        lines.append(line)
+        if not found:
+            lines.append(f"{key}='{value}'\n")
+
+        # Write back to .env
+        with open(env_path, "w") as f:
+            f.writelines(lines)
+
     def install_requirements(self):
-        """Install requirements in virtual environment"""
         requirements_file = self.project_root / "requirements.txt"
         if not requirements_file.exists():
             print("❌ requirements.txt not found!")
@@ -94,7 +130,6 @@ class ApplystLauncher:
             return False
 
     def check_env_file(self):
-        """Check if .env file exists and required environment variables are set"""
         env_file = self.project_root / ".env"
         env_example = self.project_root / ".env-example"
         
@@ -106,8 +141,7 @@ class ApplystLauncher:
                 print("💡 Create .env with the three API keys")
             print("🛑 Application cannot start without proper environment configuration")
             return False
-        
-        # Load environment variables manually (since dotenv might not be available in current env)
+
         env_vars = {}
         try:
             with open(env_file, 'r') as f:
@@ -115,20 +149,18 @@ class ApplystLauncher:
                     line = line.strip()
                     if line and not line.startswith('#') and '=' in line:
                         key, value = line.split('=', 1)
-                        # Remove quotes if present
                         value = value.strip().strip('"').strip("'")
                         env_vars[key.strip()] = value
         except Exception as e:
             print(f"❌ Error reading .env file: {e}")
             return False
         
-        # Check required environment variables
         required_vars = {
             'GMAIL_CLIENT_ID': 'Gmail OAuth Client ID',
             'GMAIL_CLIENT_SECRET': 'Gmail OAuth Client Secret', 
             'GEMINI_API_KEY': 'Google Gemini API Key'
         }
-        
+
         missing_vars = []
         for var_name, description in required_vars.items():
             value = env_vars.get(var_name, '').strip()
@@ -147,87 +179,100 @@ class ApplystLauncher:
         return True
 
     def start_backend(self):
-        """Start Flask backend in a separate process"""
-        print("🚀 Starting Flask backend on http://localhost:5000...")
         server_dir = self.project_root / "server"
-        
+        self.backend_port = self.get_free_port(5000, 6000)
+        os.environ["BACKEND_PORT"] = str(self.backend_port)
+        self.update_env_variable("BACKEND_PORT", self.backend_port)
+
+        print(f"🚀 Starting Flask backend on {os.getenv("BACKEND_URL", "http://localhost")}:{self.backend_port}...")
+
+        command = [
+            str(self.venv_python),
+            "app.py",
+            f"--port={self.backend_port}"
+        ]
+
         if self.system == "windows":
-            # Windows - use subprocess with shell
             process = subprocess.Popen(
-                f'"{self.venv_python}" app.py',
+                " ".join(command),
                 shell=True,
                 cwd=server_dir,
                 creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if hasattr(subprocess, 'CREATE_NEW_PROCESS_GROUP') else 0
             )
         else:
-            # Linux/Mac
             process = subprocess.Popen(
-                [str(self.venv_python), "app.py"],
+                command,
                 cwd=server_dir
             )
-        
+
         self.processes.append(("backend", process))
         return process
 
     def start_frontend(self):
-        """Start Streamlit frontend in a separate process"""
-        print("🚀 Starting Streamlit frontend on http://localhost:8501...")
         client_dir = self.project_root / "client"
-        
+        self.frontend_port = self.get_free_port(8501, 8600)
+        os.environ["FRONTEND_PORT"] = str(self.frontend_port)
+        self.update_env_variable("FRONTEND_PORT", self.frontend_port)
+        print(f"🚀 Starting Streamlit frontend on {os.getenv("FRONTEND_URL", "http://localhost")}:{self.frontend_port}...")
+
+        command = [
+            str(self.venv_python),
+            "-m",
+            "streamlit",
+            "run",
+            "client.py",
+            f"--server.port={self.frontend_port}"
+        ]
+
         if self.system == "windows":
-            # Windows - use subprocess with shell
             process = subprocess.Popen(
-                f'"{self.venv_python}" -m streamlit run client.py',
+                " ".join(command),
                 shell=True,
                 cwd=client_dir,
                 creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if hasattr(subprocess, 'CREATE_NEW_PROCESS_GROUP') else 0
             )
         else:
-            # Linux/Mac
             process = subprocess.Popen(
-                [str(self.venv_python), "-m", "streamlit", "run", "client.py"],
+                command,
                 cwd=client_dir
             )
-        
+
         self.processes.append(("frontend", process))
         return process
 
     def wait_for_services(self):
-        """Wait for services to start"""
         print("⏳ Waiting for services to start...")
         time.sleep(3)
-        
+
         # Check if backend is running
         try:
             import urllib.request
-            urllib.request.urlopen("http://localhost:5000/api/health", timeout=5)
-            print("✅ Backend is running on http://localhost:5000")
+            urllib.request.urlopen(f"{os.getenv("FRONTEND_URL", "http://localhost")}:{self.backend_port}/api/health", timeout=5)
+            print(f"✅ Backend is running on {os.getenv("BACKEND_URL", "http://localhost")}:{self.backend_port}")
         except:
             print("⚠️  Backend might still be starting...")
-        
-        print("✅ Frontend should be available at http://localhost:8501")
+
+        print(f"✅ Frontend should be available at {os.getenv("FRONTEND_URL", "http://localhost")}:{self.frontend_port}")
 
     def cleanup(self):
-        """Clean up processes"""
         print("\n🛑 Shutting down services...")
         for name, process in self.processes:
             try:
                 if self.system == "windows":
-                    # Windows - send CTRL_BREAK_EVENT
                     process.send_signal(signal.CTRL_BREAK_EVENT)
                 else:
-                    # Linux/Mac - send SIGTERM
                     process.terminate()
-                print(f"✅ {name} stopped")
-            except:
                 try:
+                    process.wait(timeout=5)
+                    print(f"✅ {name} stopped gracefully")
+                except subprocess.TimeoutExpired:
                     process.kill()
-                    print(f"🔴 {name} force killed")
-                except:
-                    print(f"⚠️  Could not stop {name}")
+                    print(f"🔴 {name} force killed after timeout")
+            except Exception as e:
+                print(f"⚠️ Could not stop {name}: {e}")
+
 
     def setup_signal_handlers(self):
-        """Setup signal handlers for clean shutdown"""
         def signal_handler(signum, frame):
             self.cleanup()
             sys.exit(0)
@@ -237,54 +282,32 @@ class ApplystLauncher:
             signal.signal(signal.SIGTERM, signal_handler)
 
     def run(self):
-        """Main run method"""
         print("🚀 Applyst - Auto Job Application Tracker")
         print("=" * 50)
-        
-        # Setup signal handlers
+
         self.setup_signal_handlers()
-        
-        # Check Python
-        if not self.check_python():
-            return False
-        
-        # Create virtual environment
-        if not self.create_venv():
-            return False
-        
-        # Install requirements
-        if not self.install_requirements():
-            return False
-        
-        # Check environment file and required variables
-        if not self.check_env_file():
-            return False
-        
+
+        if not self.check_python(): return False
+        if not self.create_venv(): return False
+        if not self.install_requirements(): return False
+        if not self.check_env_file(): return False
+
         print("\n🎯 Starting Applyst services...")
         print("-" * 30)
-        
-        # Start backend
-        backend_process = self.start_backend()
-        
-        # Wait a moment for backend to start
+
+        self.start_backend()
         time.sleep(2)
-        
-        # Start frontend
-        frontend_process = self.start_frontend()
-        
-        # Wait for services
+        self.start_frontend()
         self.wait_for_services()
-        
+
         print("\n🎉 Applyst is now running!")
-        print("📊 Dashboard: http://localhost:8501")
-        print("🔧 API: http://localhost:5000")
+        print(f"📊 Dashboard: {os.getenv("FRONTEND_URL", "http://localhost")}:{self.frontend_port}")
+        print(f"🔧 API: {os.getenv("BACKEND_URL", "http://localhost")}:{self.backend_port}")
         print("\n💡 To stop the application, press Ctrl+C")
-        
+
         try:
-            # Keep the main process alive
             while True:
                 time.sleep(1)
-                # Check if processes are still running
                 for name, process in self.processes:
                     if process.poll() is not None:
                         print(f"⚠️  {name} process stopped unexpectedly")
@@ -293,10 +316,10 @@ class ApplystLauncher:
             pass
         finally:
             self.cleanup()
-        
+
         return True
 
 if __name__ == "__main__":
     launcher = ApplystLauncher()
     success = launcher.run()
-    sys.exit(0 if success else 1) 
+    sys.exit(0 if success else 1)

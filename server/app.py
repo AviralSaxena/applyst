@@ -72,7 +72,7 @@ def delete_application(app_id):
     return jsonify({"message": "Application deleted"})
 
 def error_page(title, message):
-    return f'<html><body style="font-family:Arial;text-align:center;padding:50px;"><h1>{title}</h1><p>{message}</p><a href="http://localhost:8501" style="color:#4285f4;">Return to Applyst</a></body></html>'
+    return f'<html><body style="font-family:Arial;text-align:center;padding:50px;"><h1>{title}</h1><p>{message}</p><a href="{os.getenv("FRONTEND_URL", "http://localhost")}:{os.getenv("FRONTEND_PORT", 8501)}" style="color:#4285f4;">Return to Applyst</a></body></html>'
 
 @app.route("/api/gmail/auth-url", methods=["GET"])
 def get_gmail_auth_url():
@@ -101,7 +101,7 @@ def gmail_oauth_callback():
                 threading.Timer(1.0, lambda: monitor.start_monitoring()).start()
             except:
                 pass
-            return redirect('http://localhost:8501?auth=success')
+            return redirect(f'{os.getenv("FRONTEND_URL", "http://localhost")}:{os.getenv("FRONTEND_PORT", 8501)}?auth=success')
         return error_page("❌ Authentication Failed", f"Error: {result}")
     except Exception as e:
         return error_page("❌ Authentication Error", f"Something went wrong: {str(e)}")
@@ -172,4 +172,6 @@ if __name__ == "__main__":
         exit(1)
     
     print("✅ All required environment variables configured")
-    app.run(port=5000) 
+    port = int(os.getenv("PORT", 5000))  # Use .env PORT or fallback to 5000
+    app.run(port=port)
+
