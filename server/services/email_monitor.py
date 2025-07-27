@@ -41,7 +41,12 @@ class EmailMonitor:
     def start_monitoring(self):
         if self.is_running or not self.email_service.is_authenticated():
             return self.is_running
-        
+        try:
+            recent_msgs = self.email_service.list_messages(max_results=50)
+            self.email_service.processed_emails.update({m['id'] for m in recent_msgs})
+        except:
+            pass
+
         self.is_running = True
         self.monitor_thread = threading.Thread(target=self._monitor_loop, daemon=True)
         self.monitor_thread.start()
@@ -119,6 +124,15 @@ class EmailMonitor:
                     "id": app_id, "company": company, "position": position,
                     "stage": stage, "date_added": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 })
+
+            # Persist to DB (if user available)
+            try:
+                from server import app
+                from utils import db
+                if app.current_user_id:
+                    db.save_application(app.current_user_id, company, position, stage)
+            except:
+                pass
         except:
             pass
     

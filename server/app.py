@@ -4,12 +4,15 @@ from datetime import datetime
 import os
 from dotenv import load_dotenv
 from services.email_monitor import initialize_monitor, get_monitor
+from utils import db
 
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key-change-in-production')
+
+current_user_id = None
 
 applications = []
 app_counter = [1]
@@ -47,10 +50,14 @@ def add_application():
     
     if existing:
         existing.update({"stage": stage, "date_added": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+        if current_user_id:
+            db.save_application(current_user_id, company, position, stage)
         return jsonify({"message": "Application updated", "application": existing})
     
     new_app = create_app(company, position, stage)
     applications.append(new_app)
+    if current_user_id:
+        db.save_application(current_user_id, company, position, stage)
     return jsonify({"message": "Application added", "application": new_app})
 
 @app.route("/api/applications/<int:app_id>", methods=["PUT"])
@@ -63,12 +70,20 @@ def update_application(app_id):
         return jsonify({"error": "Application not found"}), 404
     
     app.update({"stage": stage, "date_added": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+    if current_user_id:
+        db.save_application(current_user_id, app["company"], app["position"], stage)
     return jsonify({"message": "Application updated", "application": app})
 
 @app.route("/api/applications/<int:app_id>", methods=["DELETE"])
 def delete_application(app_id):
     global applications
     applications = [app for app in applications if app["id"] != app_id]
+    if current_user_id:
+        try:
+            db.cursor.execute("DELETE FROM applications WHERE id=? AND user_id=?", (app_id, current_user_id))
+            db.conn.commit()
+        except:
+            pass
     return jsonify({"message": "Application deleted"})
 
 def error_page(title, message):
@@ -98,6 +113,17 @@ def gmail_oauth_callback():
         if success:
             try:
                 import threading
+                global current_user_id
+                current_user_id = db.ensure_user(result)
+                applications.clear()
+                loaded_apps = db.get_user_applications(current_user_id)
+                print(f"✅ Loaded {len(loaded_apps)} applications from DB for {result}")
+                for app in loaded_apps:
+                    print(f"  • {app['company']} - {app['position']} ({app['stage']})")
+                applications.extend(loaded_apps)
+                app_counter[0] = max([a['id'] for a in applications], default=0) + 1
+                monitor.set_applications_ref(applications, app_counter)
+
                 threading.Timer(1.0, lambda: monitor.start_monitoring()).start()
             except:
                 pass
@@ -144,11 +170,15 @@ def analyze_email():
             
             if not existing:
                 applications.append(create_app(company, job, dashboard_stage))
+                if current_user_id:
+                    db.save_application(current_user_id, company, job, dashboard_stage)
                 message = "Email analyzed and application added automatically"
             else:
                 stage_order = ['Applied', 'Interview', 'Offer', 'Rejected']
                 if stage_order.index(dashboard_stage) > stage_order.index(existing.get('stage', 'Applied')) or dashboard_stage == 'Rejected':
                     existing.update({'stage': dashboard_stage, 'date_added': datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+                    if current_user_id:
+                        db.save_application(current_user_id, company, job, dashboard_stage)
                     message = "Email analyzed and existing application updated"
                 else:
                     message = "Email analyzed but no update needed"
