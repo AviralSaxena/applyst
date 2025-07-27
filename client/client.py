@@ -1,6 +1,10 @@
 import streamlit as st
 import requests
 import time
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 st.set_page_config(page_title="Applyst | Auto Job Tracker", layout="wide")
 
@@ -30,7 +34,7 @@ st.markdown("<h1 style='text-align: center; color: #4A90E2;'>Applyst</h1><h3 sty
 # API helper
 def api(endpoint, method='GET', data=None):
     try:
-        response = getattr(requests, method.lower())(f"http://localhost:5000{endpoint}", json=data)
+        response = getattr(requests, method.lower())(f"{os.getenv("BACKEND_URL", "http://localhost")}:{os.getenv("BACKEND_PORT", "5000")}{endpoint}", json=data)
         return response.status_code == 200, response.json() if response.content else None
     except:
         return False, None
