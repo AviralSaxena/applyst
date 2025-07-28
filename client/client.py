@@ -55,6 +55,36 @@ if not apps_ok:
     apps = {"Applied": [], "Interview": [], "Offer": [], "Rejected": []}
 monitoring = monitor_ok and monitor and monitor.get('is_running', False)
 
+# Show sign-in page if not authenticated
+if not monitoring and not st.session_state.post_auth_loading:
+    if st.button("🔐 Connect with Google", key="google_signin"):
+        ok, auth = api("/api/gmail/auth-url")
+        if ok and auth:
+            st.markdown(f'<meta http-equiv="refresh" content="0; url={auth["auth_url"]}" />', unsafe_allow_html=True)
+        else:
+            st.error("❌ Failed to get authorization URL")
+    
+    # Apply custom styling to the sign-in button
+    st.markdown("""
+        <style>
+        div[data-testid="stButton"] > button[kind="secondary"] {
+            background-color: #357ae8 !important;
+            color: white !important;
+            width: 400px !important;
+            font-size: 30px !important;
+            font-weight: bold !important;
+            padding: 12px 24px !important;
+            border-radius: 8px !important;
+            border: none !important;
+            margin: 0 auto !important;
+            margin-top: 100px !important;
+            display: block !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    
+    st.stop()
+
 # Handle post-auth loading
 if st.session_state.post_auth_loading:
     total_apps = sum(len(stage_apps) for stage_apps in apps.values())
@@ -82,14 +112,7 @@ if st.session_state.post_auth_loading:
 with st.sidebar:
     st.markdown("### 📧 Gmail Connection")
     
-    if not monitoring:
-        if st.button("🔐 Sign in with Google", use_container_width=True):
-            ok, auth = api("/api/gmail/auth-url")
-            if ok and auth:
-                st.markdown(f'<meta http-equiv="refresh" content="0; url={auth["auth_url"]}" />', unsafe_allow_html=True)
-            else:
-                st.error("❌ Failed to get authorization URL")
-    else:
+    if monitoring:
         st.success(f"✅ {monitor.get('gmail_email', 'Gmail')} Connected")
         if st.button("🛑 Stop Monitoring", use_container_width=True):
             api("/api/monitor/stop", "POST")
