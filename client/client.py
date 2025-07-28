@@ -14,21 +14,29 @@ st.markdown("""
 .metric-card { background: #f0f2f6; padding: 1rem; border-radius: 0.5rem; margin: 0.5rem 0; }
 .app-card { background: white; padding: 1rem; border-radius: 0.5rem; margin: 0.5rem 0; 
            border-left: 4px solid #4A90E2; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-.monitoring { background: #d4edda; border: 1px solid #c3e6cb; padding: 10px; 
-             border-radius: 5px; margin: 10px 0; text-align: center; }
+.loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; 
+    padding: 3rem; text-align: center; background: #f8f9fa; border-radius: 10px; margin: 2rem 0; }
+.spinner { border: 4px solid #f3f3f3; border-top: 4px solid #4A90E2; border-radius: 50%; 
+    width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 1rem; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 </style>
 """, unsafe_allow_html=True)
 
-# Auto-refresh state
+# Initialize session state
 if 'last_refresh' not in st.session_state:
     st.session_state.last_refresh = 0
+if 'post_auth_loading' not in st.session_state:
+    st.session_state.post_auth_loading = False
+if 'auth_loading_start' not in st.session_state:
+    st.session_state.auth_loading_start = 0
 
-# Check for auth success and trigger immediate refresh
+# Handle auth success
 if st.query_params.get('auth') == 'success':
     st.query_params.clear()
+    st.session_state.post_auth_loading = True
+    st.session_state.auth_loading_start = time.time()
     st.rerun()
 
-# Title
 st.markdown("<h1 style='text-align: center; color: #4A90E2;'>Applyst</h1><h3 style='text-align: center; color: #666;'>Auto Job Application Tracker</h3>", unsafe_allow_html=True)
 
 # API helper
@@ -42,12 +50,33 @@ def api(endpoint, method='GET', data=None):
 # Get data
 monitor_ok, monitor = api("/api/monitor/status")
 apps_ok, apps = api("/api/applications")
-
 if not apps_ok:
     st.error("⚠️ Backend not running. Start server: `cd server && python app.py`")
     apps = {"Applied": [], "Interview": [], "Offer": [], "Rejected": []}
-
 monitoring = monitor_ok and monitor and monitor.get('is_running', False)
+
+# Handle post-auth loading
+if st.session_state.post_auth_loading:
+    total_apps = sum(len(stage_apps) for stage_apps in apps.values())
+    if monitoring and total_apps > 0:
+        st.session_state.post_auth_loading = False
+        st.rerun()
+    elif time.time() - st.session_state.auth_loading_start > 30:
+        st.session_state.post_auth_loading = False
+        st.error("⚠️ Authentication completed but setup is taking longer than expected. Try refreshing.")
+        st.rerun()
+    else:
+        st.markdown("""
+            <div class="loading-container">
+                <div class="spinner"></div>
+                <h3 style="color: #4A90E2; margin: 0;">Setting up your job tracker...</h3>
+                <p style="color: #666; margin: 0.5rem 0;">
+                    ✅ Gmail connected successfully<br>🔄 Loading applications and starting monitoring...
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+        time.sleep(2)
+        st.rerun()
 
 # Sidebar
 with st.sidebar:
@@ -67,7 +96,6 @@ with st.sidebar:
             st.rerun()
     
     st.markdown("➕ Manually Add Application")
-    
     with st.form("add_app"):
         company = st.text_input("Company Name")
         position = st.text_input("Position")
@@ -84,8 +112,8 @@ with st.sidebar:
             else:
                 st.error("Please fill in both company and position")
 
-# Auto-refresh
-if monitoring and time.time() - st.session_state.last_refresh > 10:
+# Auto-refresh (skip during loading)
+if not st.session_state.post_auth_loading and monitoring and time.time() - st.session_state.last_refresh > 10:
     st.session_state.last_refresh = time.time()
     st.rerun()
 
@@ -93,6 +121,7 @@ stages = ["Applied", "Interview", "Offer", "Rejected"]
 colors = ["#4A90E2", "#F39C12", "#27AE60", "#E74C3C"]
 emojis = ["📄", "🎤", "🎉", "❌"]
 
+# Metrics
 cols = st.columns(4)
 for i, (stage, color, emoji) in enumerate(zip(stages, colors, emojis)):
     with cols[i]:
@@ -123,16 +152,14 @@ for i, stage in enumerate(stages):
             
             col1, col2 = st.columns(2)
             with col1:
-                next_stages = stages
-                if next_stages:
-                    new_stage = st.selectbox("Move to:", next_stages, key=f"m{app['id']}", label_visibility="collapsed", index=stages.index(stage))
-                    if st.button("Move", key=f"bm{app['id']}", use_container_width=True):
-                        if api(f"/api/applications/{app['id']}", "PUT", {"stage": new_stage})[0]:
-                            st.success(f"Moved to {new_stage}!")
-                            time.sleep(1)
-                            st.rerun()
-                        else:
-                            st.error("Failed")
+                new_stage = st.selectbox("Move to:", stages, key=f"m{app['id']}", label_visibility="collapsed", index=stages.index(stage))
+                if st.button("Move", key=f"bm{app['id']}", use_container_width=True):
+                    if api(f"/api/applications/{app['id']}", "PUT", {"stage": new_stage})[0]:
+                        st.success(f"Moved to {new_stage}!")
+                        time.sleep(1)
+                        st.rerun()
+                    else:
+                        st.error("Failed")
             
             with col2:
                 if st.button("🗑️", key=f"bd{app['id']}", use_container_width=True):
