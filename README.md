@@ -27,8 +27,11 @@ Automatically tracks job applications from Gmail using AI analysis.
 3. **Run**
    ```bash
    python setup_and_run.py
+   # Or python3 setup_and_run.py
    ```
 
 The script handles everything - virtual environment, dependencies, and launches both frontend and backend.
+
+**Heads-up:** The very first run can take some time (**5-10 minutes**) because the script creates the virtual environment and pulls down large Python packages. Please be patient—subsequent runs would be instant.
 
 Access at: http://localhost:8501

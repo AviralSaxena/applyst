@@ -36,12 +36,14 @@ class ApplystLauncher:
             self.venv_activate = self.venv_path / "Scripts" / "activate.bat"
             self.venv_python = self.venv_path / "Scripts" / "python.exe"
             self.venv_pip = self.venv_path / "Scripts" / "pip.exe"
+            self.venv_uv = self.venv_path / "Scripts" / "uv.exe"
         else:  # Linux/Mac
             self.python_cmd = "python3"
             self.pip_cmd = "pip3"
             self.venv_activate = self.venv_path / "bin" / "activate"
             self.venv_python = self.venv_path / "bin" / "python"
             self.venv_pip = self.venv_path / "bin" / "pip"
+            self.venv_uv = self.venv_path / "bin" / "uv"
 
     def get_free_port(self, start=5000, end=9000):
         for port in range(start, end):
@@ -93,6 +95,26 @@ class ApplystLauncher:
             print(f"❌ Failed to create virtual environment: {output}")
             return False
 
+    def check_and_install_uv(self):
+        if self.venv_uv.exists():
+            print("✅ uv is already installed in virtual environment")
+            return True
+        
+        success, _ = self.run_command("uv --version")
+        if success:
+            print("✅ uv found globally")
+            return True
+        
+        print("📦 Installing uv for faster package management...")
+        
+        success, output = self.run_command(f'"{self.venv_pip}" install uv')
+        if success:
+            print("✅ uv installed successfully")
+            return True
+        else:
+            print(f"⚠️ Failed to install uv, will fall back to pip: {output}")
+            return False
+
     def update_env_variable(self, key, value):
         env_path = self.project_root / ".env"
         lines = []
@@ -121,9 +143,25 @@ class ApplystLauncher:
             return False
         
         print("📦 Installing requirements...")
+        
+        # Try to use uv first (much faster)
+        if self.check_and_install_uv():
+            print("🚀 Using uv for super-fast package installation...")
+            
+            uv_command = f'"{self.venv_uv}" pip install -r requirements.txt --python "{self.venv_python}"'
+            
+            success, output = self.run_command(uv_command)
+            if success:
+                print("✅ Requirements installed successfully with uv")
+                return True
+            else:
+                print(f"⚠️ uv installation failed, falling back to pip: {output}")
+        
+        # Fallback to pip
+        print("📦 Using pip for package installation...")
         success, output = self.run_command(f'"{self.venv_pip}" install -r requirements.txt')
         if success:
-            print("✅ Requirements installed successfully")
+            print("✅ Requirements installed successfully with pip")
             return True
         else:
             print(f"❌ Failed to install requirements: {output}")

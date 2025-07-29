@@ -6,7 +6,6 @@ _DB_PATH = os.getenv('APPLYST_DB_PATH', os.path.join(os.path.dirname(__file__), 
 conn = sqlite3.connect(_DB_PATH, check_same_thread=False)
 cursor = conn.cursor()
 
-# Basic schema – kept minimal and independent
 cursor.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT UNIQUE, created_at TEXT)')
 cursor.execute('''CREATE TABLE IF NOT EXISTS applications (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
