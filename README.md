@@ -5,8 +5,18 @@ Automatically tracks job applications from Gmail using AI analysis.
 ## Setup
 
 1. **Get API Keys**
-   - [Gmail OAuth](https://console.developers.google.com) - Create credentials for Desktop app
-   - [Gemini AI](https://aistudio.google.com/app/apikey) - Get API key
+   
+   **Gmail OAuth Setup:**
+   - Go to [Google Cloud Console](https://console.developers.google.com)
+   - Create a new project or select existing one
+   - Enable the Gmail API (APIs & Services → Library → search "Gmail API")
+   - Go to Credentials → Create Credentials → OAuth 2.0 Client IDs
+   - copy the `Client ID` and `Client Secret` values.
+   
+   **Gemini AI Setup:**
+   - Visit [Google AI Studio](https://aistudio.google.com/app/apikey)
+   - Click "Create API Key" 
+   - Copy the generated API key
 
 2. **Configure**
    ```bash
